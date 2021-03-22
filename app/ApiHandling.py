@@ -50,7 +50,7 @@ class Item(BaseModel):
 @app.post("/opencv/predict")
 async def traditionalPrediction(item: Item):
     #call something like:
-    prediction = trad.predict(item["image"])
+    prediction = trad.predict(item.image)
     return {"level": prediction["level"]}
 
 if __name__ == "__main__":
