@@ -10,8 +10,13 @@ import aiofiles
 #Fastai start
 path = Path(__file__).parent
 # REPLACE THIS WITH YOUR URL
-export_url = "<your link to your model>"
+export_url = "https://www.dropbox.com/s/9p1omxq9d275r8e/export.pkl?dl=1"
 export_file_name = 'export.pkl'
+
+
+def label_func(fn): 
+
+  return path/'Maske'/f'{fn.stem}_P.png'
 
 
 async def download_file(url, dest):
@@ -28,6 +33,7 @@ async def download_file(url, dest):
 async def setup_learner():
     await download_file(export_url, path / export_file_name)
     try:
+        
         learn = load_learner(path/export_file_name)
         learn.dls.device = 'cpu'
         return learn

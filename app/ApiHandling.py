@@ -8,10 +8,15 @@ import asyncio
 import aiohttp
 import aiofiles
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from machineLearning import *
+from pydantic import BaseModel 
+
+class Item(BaseModel): 
+    image: str 
+    description: Optional[str] = None 
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/", StaticFiles(directory="app/"), name="static")
 
 
 origins = [
@@ -37,10 +42,14 @@ async def startup_event():
 
 
 @app.post("/fastai/predict")
-async def machineLearningPrediction(file: bytes = File(...)):
-    pred = learn.predict(file)
-    return {"result": pred[0]}
+async def machineLearningPrediction(item:Item):
+    #pred = learn.predict(file)
+    return {"result": "Hello worlD!"}
 
+# @app.post("/opencv/predict")
+# async def analyze(file: bytes = File(...)):
+#     pred = learn.predict(file)
+#     return {"result": pred[0]}
 
 class Item(BaseModel):
     """used for parsing the json payload"""
@@ -54,4 +63,4 @@ async def traditionalPrediction(item: Item):
     return {"level": prediction["level"]}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=5000)
+    uvicorn.run(app, host="0.0.0.0", port=80)
