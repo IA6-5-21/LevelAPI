@@ -50,8 +50,8 @@ class Item(BaseModel):
 @app.post("/opencv/predict")
 async def traditionalPrediction(item: Item):
     #call something like:
-    #prediction = trad.predict(item)
-    return {"level": "some level"}
+    prediction = trad.predict(item["image"])
+    return {"level": prediction["level"]}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=5000)

@@ -50,3 +50,8 @@ def model(cvImage):
     # cv2.namedWindow("output4", cv2.WINDOW_NORMAL)        # Create window with freedom of dimensions                    
     # cv2.imshow("output4", container_clone)                            # Show image
     # cv2.waitKey(0) 
+
+def predict(base64Image):
+    cvImage = base64toCvImage(base64Image)
+    level = model(cvImage)
+    return level
