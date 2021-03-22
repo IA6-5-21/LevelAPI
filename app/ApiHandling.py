@@ -2,12 +2,13 @@ from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastai.vision.all import *
+import traditional as trad
 import uvicorn
 import asyncio
 import aiohttp
 import aiofiles
 from fastapi.middleware.cors import CORSMiddleware
-
+from pydantic import BaseModel
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
@@ -40,11 +41,17 @@ async def machineLearningPrediction(file: bytes = File(...)):
     pred = learn.predict(file)
     return {"result": pred[0]}
 
-@app.post("/opencv/predict")
-async def analyze(file: bytes = File(...)):
-    pred = learn.predict(file)
-    return {"result": pred[0]}
 
+class Item(BaseModel):
+    """used for parsing the json payload"""
+    name: str
+    image: str
+
+@app.post("/opencv/predict")
+async def traditionalPrediction(item: Item):
+    #call something like:
+    prediction = trad.predict(item.image)
+    return {"level": prediction["level"]}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=80
+    uvicorn.run(app, host="localhost", port=5000)

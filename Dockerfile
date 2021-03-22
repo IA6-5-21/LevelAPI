@@ -16,3 +16,4 @@ RUN ls app/
 EXPOSE 80
 
 CMD ["python", "app/ApiHandling.py", "serve"]
+
