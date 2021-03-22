@@ -15,4 +15,4 @@ RUN ls app/
 
 EXPOSE 80
 
-CMD ["python", "app/server.py", "serve"]
+CMD ["python", "app/ApiHandling.py", "serve"]
