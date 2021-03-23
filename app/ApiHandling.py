@@ -64,10 +64,11 @@ async def machineLearningPrediction(item:Item):
     image = base64toimage(item.image)
     pred = learn.predict(image)
     level = checkLevel(pred)
+    print(level)
 
 
     '''ReturnTEST; sending recieved image back to sender (coffeefinder webpage)'''
-    return {"name": "Hello worlD! the level is" + level+""}
+    return {"name": f"Hello worlD! the level is: {level}"}
 
 '''Commented out during development of machinelearning module'''
 # @app.post("/opencv/predict")
