@@ -38,9 +38,9 @@ async def startup_event():
     global learn
     '''Receive model from onedrive'''
     '''commented out to increase loading speed when not predicting during development''' 
-    #loop = asyncio.get_event_loop()  # get event loop
-    #tasks = [asyncio.ensure_future(setup_learner())]  # assign some task
-    #learn = (await asyncio.gather(*tasks))[0]  # get tasks
+    loop = asyncio.get_event_loop()  # get event loop
+    tasks = [asyncio.ensure_future(setup_learner())]  # assign some task
+    learn = (await asyncio.gather(*tasks))[0]  # get tasks
 
 
 
@@ -48,31 +48,93 @@ async def startup_event():
 @app.get("/fastai/predict",response_class=HTMLResponse)
 async def wrongPage():
     '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
-    #pred = learn.predict(file)
     print("GET test")
-    return """
-    <html>
-        <head>
-            <title>Wrong place!</title>
-        </head>
-        <body>
-            <h1>Wrong page, please goto Coffeefinder webpage@ <a href="http://localhost:3000/">localhost:3000</a>!</h1>
-        </body>
-    </html>
-    """
-    
+    return getPage()
+
+@app.get("/",response_class=HTMLResponse)
+async def wrongPageroot():
+    '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
+    print("GET test")
+    return getPage()
 
 @app.post("/fastai/predict")
 async def machineLearningPrediction(item:Item):
-    #pred = learn.predict(file)
+    
+    print("POST test!")
+    image = base64toimage(item.image)
+    pred = learn.predict(image)
+    level = checkLevel(pred)
+
+
     '''ReturnTEST; sending recieved image back to sender (coffeefinder webpage)'''
-    return {"name": "Hello worlD!", "image":item.image}
+    return {"name": "Hello worlD! the level is" + level+""}
 
 '''Commented out during development of machinelearning module'''
 # @app.post("/opencv/predict")
 # async def analyze(file: bytes = File(...)):
 #     pred = learn.predict(file)
 #     return {"result": pred[0]}
+def getPage():
+    '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
+    
+    return """
+    <html>
+        <head>
+            <title>Wrong place!</title>
+            <meta http-equiv="refresh" content="10; URL=http://localhost:3000/" />
+            <link
+            rel="stylesheet"
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+            />
+            <link
+            href="https://fonts.googleapis.com/css?family=Montserrat"
+            rel="stylesheet"
+            type="text/css"
+            />
+
+            <link
+            href="https://fonts.googleapis.com/css?family=Lato"
+            rel="stylesheet"
+            type="text/css"
+            />
+            <style>
+            body {
+            font: 400 15px Lato, sans-serif;
+            line-height: 1.8;
+            color: #818181;
+            }
+            h2 {
+            font-size: 24px;
+            text-transform: uppercase;
+            color: #303030;
+            font-weight: 600;
+            margin-bottom: 30px;
+            }
+            h4 {
+            font-size: 19px;
+            line-height: 1.375em;
+            color: #303030;
+            font-weight: 400;
+            margin-bottom: 30px;
+            }
+            .jumbotron {
+            background-color: #f4511e;
+            color: #fff;
+            padding: 100px 25px;
+            font-family: Montserrat, sans-serif;
+            }
+            </style>
+
+        </head>
+
+        <body>
+             <div class="jumbotron text-center">
+                <h1>Wrong page</h1>
+                <p>Redirecting to the Coffeefinder webpage @ <a href="http://localhost:3000/">localhost:3000</a>!</p>
+            </div>
+        </body>
+    </html>
+    """
 
 
 if __name__ == "__main__":
