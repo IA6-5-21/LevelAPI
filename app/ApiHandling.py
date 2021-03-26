@@ -63,11 +63,11 @@ async def machineLearningPrediction(item:Item):
     print("POST test!")
     image = base64toimage(item.image)
     pred = learn.predict(image)
-    level = checkLevel(pred)
+    level = runPredict(pred)
     print(level)
 
 
-    '''ReturnTEST; sending recieved image back to sender (coffeefinder webpage)'''
+    '''ReturnTEST; sending level back to sender (coffeefinder webpage)'''
     return {"name": f"Hello worlD! the level is: {level}"}
 
 '''Commented out during development of machinelearning module'''
