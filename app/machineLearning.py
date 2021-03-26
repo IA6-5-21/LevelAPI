@@ -49,7 +49,7 @@ async def setup_learner():
         else:
             raise
 
-def runPredict(predicion)
+def runPredict(predicion):
   lines = prediction[0]
   edges = findContainerEdges(lines)
   coffeeLevel = findCoffeeLevel(edges)  
