@@ -9,6 +9,7 @@ import aiohttp
 import aiofiles
 from fastapi.middleware.cors import CORSMiddleware
 from machineLearning import *
+
 from pydantic import BaseModel 
 
 class Item(BaseModel): 
@@ -60,15 +61,16 @@ async def wrongPageroot():
 @app.post("/fastai/predict")
 async def machineLearningPrediction(item:Item):
     
+    level = 15.0
     print("POST test!")
     image = base64toimage(item.image)
     pred = learn.predict(image)
     level = checkLevel(pred)
+    aimage = tensor2image(pred)
     print(level)
 
-
     '''ReturnTEST; sending recieved image back to sender (coffeefinder webpage)'''
-    return {"name": f"Hello worlD! the level is: {level}"}
+    return {"name": "fastai","level": level,"image":aimage}
 
 '''Commented out during development of machinelearning module'''
 # @app.post("/opencv/predict")

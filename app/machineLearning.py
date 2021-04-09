@@ -72,28 +72,62 @@ def base64toimage(baseInput):
     except:
         pass
     return lastImgName
+
+def tensor2image(tensors):
+    ### Saving plot to PNG #####
+    plt.imshow(tensors[1])
+    filename = 'predictionPlot.png'
+    plotfile = os.path.join(path,filename)
+    plt.savefig(plotfile,bbox_inches='thight')
+    encoded = f'data:image/png;base64,{base64.b64encode(open(plotfile, "rb").read()).decode()}' 
+    #'data:image/png;base64,{}'.format(encoded)
+    #plotImage =   Image.open('books_read.png')  
+    #encoded_string = ""
+    #plotBytes  = BytesIO(plotImage)
+    #encoded_string = base64.b64encode(plotBytes)
+    return encoded
 #### LEvelchecks
 def checkLevel(prediction):
-    coffe = 0
-    notCoffee = 0
-    total=0
-    lines = prediction[1]
-    for i in range(0,200):
-        for j in range(0,200 ):
-            if(lines[i][j]==255):
-                coffe=coffe+1
-            elif(lines[i][j]==127):
-                notCoffee = notCoffee+1
-            total=total+1
-    if coffe != 0 and coffe != 0.0:
-        levelEstimate =  round((coffe/(coffe + notCoffee))*100,1)
-    else:
-        levelEstimate = 'NullLevel'
-    print(f"the level is: {levelEstimate}%")
-    print(f"Coffee: {coffe}")
-    print(f"Not Coffee: {notCoffee}")
-    print(f"Total: {total}")
-    return levelEstimate
+    lines = prediction[0]
+    edges = findContainerEdges(lines)
+    coffeeLevel = findCoffeeLevel(edges)
+    print(f"coffeeLevel: {coffeeLevel}%")
+    return coffeeLevel
+def findContainerEdges(slices):
+  i=100
+  j=0
+  k=199
+  l=199
+  while slices[i][j]==0:#Looks for the first non-black pixel from the left
+    leftEdge=j
+    j+=1
+  while slices[i][k]==0:#Looks for the first non-black pixel from the right
+    rightEdge=k
+    k-=1
+  m=int(((rightEdge-leftEdge)/2) + leftEdge)#Looks for the first white pixel from the bottom
+  while slices[l][m]!=255:
+    bottomEdge=l
+    l-=1
+  return {"leftEdge":leftEdge+10, "rightEdge":rightEdge-10,"bottomEdge":bottomEdge}
+
+def findCoffeeLevel(edges):
+  coffee = 0
+  notCoffee = 0
+  total=0 
+  coffeeLevel=0
+  leftEdge=edges["leftEdge"]
+  rightEdge=edges["rightEdge"]
+  bottomEdge=edges["bottomEdge"]
+  for i in range(0,bottomEdge): #bredde
+    for j in range(leftEdge,rightEdge): #Høyde
+      if(lines[i][j]==255): #Hvit/Kaffe
+       coffee=coffee+1
+      elif(lines[i][j]==127): #Gray/Container
+       notCoffee = notCoffee+1
+      total=total+1
+      if coffee!=0:
+       coffeeLevel = round((coffee/(coffee + notCoffee))*100,1)
+  return coffeeLevel
 
 
 learn = None
