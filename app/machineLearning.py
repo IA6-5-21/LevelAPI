@@ -49,6 +49,12 @@ async def setup_learner():
         else:
             raise
 
+def runPredict(predicion):
+  lines = prediction[0]
+  edges = findContainerEdges(lines)
+  coffeeLevel = findCoffeeLevel(edges)  
+  print(f"coffeeLevel: {coffeeLevel}%")
+  return coffeeLvel
 def base64toimage(baseInput):
     try: 
             base64_data = re.sub('^data:image/.+;base64,', '', baseInput)
@@ -87,6 +93,24 @@ def tensor2image(tensors):
     #encoded_string = base64.b64encode(plotBytes)
     return encoded
 #### LEvelchecks
+def findContainerEdges(slices):
+  i=100
+  j=0
+  k=199
+  l=199
+  while slices[i][j]==0:#Looks for the first non-black pixel from the left
+    leftEdge=j
+    j+=1
+  while slices[i][k]==0:#Looks for the first non-black pixel from the right
+    rightEdge=k
+    k-=1
+  m=int(((rightEdge-leftEdge)/2) + leftEdge)#Looks for the first white pixel from the bottom
+  while slices[l][m]!=255:
+    bottomEdge=l
+    l-=1
+  return {"leftEdge":leftEdge+10, "rightEdge":rightEdge-10,"bottomEdge":bottomEdge}
+
+
 def checkLevel(prediction):
     lines = prediction[0]
     edges = findContainerEdges(lines)
