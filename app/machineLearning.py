@@ -7,11 +7,20 @@ import asyncio
 import aiohttp
 import aiofiles
 
+from io import BytesIO
+import sys
+import base64, re
+from PIL import Image
 #Fastai start
 path = Path(__file__).parent
 # REPLACE THIS WITH YOUR URL
-export_url = "<your link to your model>"
+export_url = "https://www.dropbox.com/s/9p1omxq9d275r8e/export.pkl?dl=1"
 export_file_name = 'export.pkl'
+
+
+def label_func(fn): 
+
+  return path/'Maske'/f'{fn.stem}_P.png'
 
 
 async def download_file(url, dest):
@@ -28,6 +37,7 @@ async def download_file(url, dest):
 async def setup_learner():
     await download_file(export_url, path / export_file_name)
     try:
+        
         learn = load_learner(path/export_file_name)
         learn.dls.device = 'cpu'
         return learn
@@ -38,6 +48,111 @@ async def setup_learner():
             raise RuntimeError(message)
         else:
             raise
+
+def runPredict(predicion):
+  lines = prediction[0]
+  edges = findContainerEdges(lines)
+  coffeeLevel = findCoffeeLevel(edges)  
+  print(f"coffeeLevel: {coffeeLevel}%")
+  return coffeeLvel
+def base64toimage(baseInput):
+    try: 
+            base64_data = re.sub('^data:image/.+;base64,', '', baseInput)
+            byte_data = base64.b64decode(base64_data)
+            image_data = BytesIO(byte_data)
+
+    except:
+        pass
+
+    #print(baseInput)
+    
+    lastImgName = ''
+    try:
+        img = Image.open(image_data)
+        #img
+        t = time.time()
+        #imagename = 'test' +str(t) + '.png'
+        imagename = 'incommingImage.png'
+        lastImgName = os.path.join(path,imagename)#'PythonHttpTrigger\\'+'test' +str(t) + '.png'
+        img.save(lastImgName)
+    except:
+        pass
+    return lastImgName
+
+def tensor2image(tensors):
+    ### Saving plot to PNG #####
+    plt.imshow(tensors[1])
+    filename = 'predictionPlot.png'
+    plotfile = os.path.join(path,filename)
+    plt.savefig(plotfile,bbox_inches='thight')
+    encoded = f'data:image/png;base64,{base64.b64encode(open(plotfile, "rb").read()).decode()}' 
+    #'data:image/png;base64,{}'.format(encoded)
+    #plotImage =   Image.open('books_read.png')  
+    #encoded_string = ""
+    #plotBytes  = BytesIO(plotImage)
+    #encoded_string = base64.b64encode(plotBytes)
+    return encoded
+#### LEvelchecks
+def findContainerEdges(slices):
+  i=100
+  j=0
+  k=199
+  l=199
+  while slices[i][j]==0:#Looks for the first non-black pixel from the left
+    leftEdge=j
+    j+=1
+  while slices[i][k]==0:#Looks for the first non-black pixel from the right
+    rightEdge=k
+    k-=1
+  m=int(((rightEdge-leftEdge)/2) + leftEdge)#Looks for the first white pixel from the bottom
+  while slices[l][m]!=255:
+    bottomEdge=l
+    l-=1
+  return {"leftEdge":leftEdge+10, "rightEdge":rightEdge-10,"bottomEdge":bottomEdge}
+
+
+def checkLevel(prediction):
+    lines = prediction[0]
+    edges = findContainerEdges(lines)
+    coffeeLevel = findCoffeeLevel(edges)
+    print(f"coffeeLevel: {coffeeLevel}%")
+    return coffeeLevel
+def findContainerEdges(slices):
+  i=100
+  j=0
+  k=199
+  l=199
+  while slices[i][j]==0:#Looks for the first non-black pixel from the left
+    leftEdge=j
+    j+=1
+  while slices[i][k]==0:#Looks for the first non-black pixel from the right
+    rightEdge=k
+    k-=1
+  m=int(((rightEdge-leftEdge)/2) + leftEdge)#Looks for the first white pixel from the bottom
+  while slices[l][m]!=255:
+    bottomEdge=l
+    l-=1
+  return {"leftEdge":leftEdge+10, "rightEdge":rightEdge-10,"bottomEdge":bottomEdge}
+
+def findCoffeeLevel(edges):
+  coffee = 0
+  notCoffee = 0
+  total=0 
+  coffeeLevel=0
+  leftEdge=edges["leftEdge"]
+  rightEdge=edges["rightEdge"]
+  bottomEdge=edges["bottomEdge"]
+  for i in range(0,bottomEdge): #bredde
+    for j in range(leftEdge,rightEdge): #Høyde
+      if(lines[i][j]==255): #Hvit/Kaffe
+       coffee=coffee+1
+      elif(lines[i][j]==127): #Gray/Container
+       notCoffee = notCoffee+1
+      total=total+1
+      if coffee!=0:
+       coffeeLevel = round((coffee/(coffee + notCoffee))*100,1)
+  return coffeeLevel
+
 
 learn = None
 #Fastai slutt
