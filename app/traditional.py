@@ -51,7 +51,7 @@ def model(cvImage):
 
         backtorgb = cv2.cvtColor(container_threshold,cv2.COLOR_GRAY2RGB)
         cv2.rectangle(backtorgb, (x, y), (x + w, y + h), (0, 0, 255), 4)
-        cv2.putText(backtorgb, f"{levelPercent}%", (x + 10, y + 60), cv2.FONT_HERSHEY_PLAIN, 5, (0, 0, 255), 5)
+        #cv2.putText(backtorgb, f"{levelPercent}%", (x + 10, y + 60), cv2.FONT_HERSHEY_PLAIN, 5, (0, 0, 255), 5)
 
         noegreier, buffer = cv2.imencode('.png',backtorgb)
         base64string = toBase64(buffer)
