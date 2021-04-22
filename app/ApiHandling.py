@@ -11,11 +11,13 @@ import aiohttp
 #from fastapi.middleware.cors import CORSMiddleware
 from machineLearning import *
 
-from pydantic import BaseModel 
+from pydantic import BaseModel
 
-class Item(BaseModel): 
-    image: str 
+
+class Item(BaseModel):
+    image: str
     name: str
+
 
 app = FastAPI()
 
@@ -39,57 +41,62 @@ async def startup_event():
     print("Setup the learner on server start")
     global learn
     '''Receive model from onedrive'''
-    '''commented out to increase loading speed when not predicting during development''' 
+    '''commented out to increase loading speed when not predicting during development'''
     loop = asyncio.get_event_loop()  # get event loop
     tasks = [asyncio.ensure_future(setup_learner())]  # assign some task
     learn = (await asyncio.gather(*tasks))[0]  # get tasks
 
+
 @app.post("/fastai/predict")
-async def machineLearningPrediction(item:Item):
-    
+async def machineLearningPrediction(item: Item):
+
     # level = 1337  #Avoid null error
     print("fastai POST test!")
-    image = base64toimage(item.image)   #Convert the recieved base64string to a image, returns image
-    pred = learn.predict(image)         #Run prediction, return tensorflow
-    level = checkLevel(pred)            #Analyses the tensor and calculates level ,returns level 
-    plotimage = tensor2image(pred)         #Create a image plot  of the prediction 
+    # Convert the recieved base64string to a image, returns image
+    image = base64toimage(item.image)
+    pred = learn.predict(image)  # Run prediction, return tensorflow
+    # Analyses the tensor and calculates level ,returns level
+    level = checkLevel(pred)
+    plotimage = tensor2image(pred)  # Create a image plot  of the prediction
     print(level)
-    
-    return {"name": "fastai","level": level,"image":plotimage}
+
+    return {"name": "fastai", "level": level, "image": plotimage}
 
 
 @app.post("/opencv/predict")
 async def traditionalPrediction(item: Item):
     print("openCv POST test!")
-    #call something like:
+    # call something like:
     prediction = trad.predict(item.image)
     return prediction
-    
 
 
-## Redirecting to azurewebpage if entering fastapi container domain
+# Redirecting to azurewebpage if entering fastapi container domain
 
-@app.get("/",response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse)
 async def wrongPageroot():
     '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
     print("GET test")
     return getPage()
 
-@app.get("/fastai/predict",response_class=HTMLResponse)
+
+@app.get("/fastai/predict", response_class=HTMLResponse)
 async def wrongPage():
     '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
     print("GET test")
     return getPage()
 
-@app.get("/opencv/predict",response_class=HTMLResponse)
+
+@app.get("/opencv/predict", response_class=HTMLResponse)
 async def wrongPage():
     '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
     print("GET test")
     return getPage()
+
 
 def getPage():
     '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
-    
+
     return """
     <html>
         <head>

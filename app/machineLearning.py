@@ -9,18 +9,19 @@ import aiofiles
 
 from io import BytesIO
 import sys
-import base64, re
+import base64
+import re
 from PIL import Image
-#Fastai start
+# Fastai start
 path = Path(__file__).parent
 # REPLACE THIS WITH YOUR URL
 export_url = "https://www.dropbox.com/s/9p1omxq9d275r8e/export.pkl?dl=1"
 export_file_name = 'export.pkl'
 
 
-def label_func(fn): 
+def label_func(fn):
 
-  return path/'Maske'/f'{fn.stem}_P.png'
+    return path/'Maske'/f'{fn.stem}_P.png'
 
 
 async def download_file(url, dest):
@@ -37,7 +38,7 @@ async def download_file(url, dest):
 async def setup_learner():
     await download_file(export_url, path / export_file_name)
     try:
-        
+
         learn = load_learner(path/export_file_name)
         learn.dls.device = 'cpu'
         return learn
@@ -49,113 +50,120 @@ async def setup_learner():
         else:
             raise
 
+
 def runPredict(predicion):
-  try: 
-    lines = prediction[0]
-    edges = findContainerEdges(lines)
-    coffeeLevel = findCoffeeLevel(edges,lines)  
-    print(f"coffeeLevel: {coffeeLevel}%")
-    return coffeeLevel
-  except:
-    coffeeLevel = "Error"
-    return coffeeLevel
+    try:
+        lines = prediction[0]
+        edges = findContainerEdges(lines)
+        coffeeLevel = findCoffeeLevel(edges, lines)
+        print(f"coffeeLevel: {coffeeLevel}%")
+        return coffeeLevel
+    except:
+        coffeeLevel = "Error"
+        return coffeeLevel
+
+
 def base64toimage(baseInput):
-    try: 
-            base64_data = re.sub('^data:image/.+;base64,', '', baseInput)
-            byte_data = base64.b64decode(base64_data)
-            image_data = BytesIO(byte_data)
+    try:
+        base64_data = re.sub('^data:image/.+;base64,', '', baseInput)
+        byte_data = base64.b64decode(base64_data)
+        image_data = BytesIO(byte_data)
 
     except:
         pass
 
-    #print(baseInput)
-    
+    # print(baseInput)
+
     lastImgName = ''
     try:
         img = Image.open(image_data)
- 
+
         t = time.time()
- 
+
         imagename = 'incommingImage.png'
-        lastImgName = os.path.join(path,imagename)
+        lastImgName = os.path.join(path, imagename)
         img.save(lastImgName)
     except:
         pass
     return lastImgName
 
+
 def tensor2image(tensors):
     ### Saving plot to PNG #####
-    #plt.figure(figsize=(30,30))
-    
+    # plt.figure(figsize=(30,30))
+
     plt.imshow(tensors[1])
     filename = 'predictionPlot.png'
 
-    plotfile = os.path.join(path,filename)
+    plotfile = os.path.join(path, filename)
     plt.axis('off')
 
-    plt.savefig(plotfile)#,bbox_inches="thigth")
-    encoded = f'data:image/png;base64,{base64.b64encode(open(plotfile, "rb").read()).decode()}' 
-    
+    plt.savefig(plotfile, bbox_inches="tight", pad_inches=0)
+    encoded = f'data:image/png;base64,{base64.b64encode(open(plotfile, "rb").read()).decode()}'
+
     return encoded
-#### LEvelchecks
+# LEvelchecks
+
+
 def findContainerEdges(slices):
-  #print((slices[100]))
-  i=100
-  j=0
-  k=199
-  l=199
-  try:
-    while slices[i][j]==0:#Looks for the first non-black pixel from the left
-      leftEdge=j
-      j+=1 
+    # print((slices[100]))
+    i = 100
+    j = 0
+    k = 199
+    l = 199
+    try:
+        while slices[i][j] == 0:  # Looks for the first non-black pixel from the left
+            leftEdge = j
+            j += 1
+
+        while slices[i][k] == 0:  # Looks for the first non-black pixel from the right
+            rightEdge = k
+            k -= 1
+
+        # Looks for the first white pixel from the bottom
+        m = int(((rightEdge-leftEdge)/2) + leftEdge)
+        while slices[l][m] != 255:
+            bottomEdge = l
+            l -= 1
+        return {"leftEdge": leftEdge+10, "rightEdge": rightEdge-10, "bottomEdge": bottomEdge}
+    except IndexError:
+        print("index error")
+        return {"leftEdge": None, "rightEdge": None, "bottomEdge": None}
+    except:
+        print("General Error")
+        return {"leftEdge": None, "rightEdge": None, "bottomEdge": None}
 
 
-    while slices[i][k]==0:#Looks for the first non-black pixel from the right
-      rightEdge=k
-      k-=1
+def findCoffeeLevel(lines, edges):
+    coffee = 0
+    notCoffee = 0
+    total = 0
+    coffeeLevel = 0
+    if edges["leftEdge"] == None or ["rightEdge"] == None:
+        return "error"
+    leftEdge = edges["leftEdge"]
+    rightEdge = edges["rightEdge"]
+    bottomEdge = edges["bottomEdge"]
+    for i in range(0, bottomEdge):  # bredde
+        for j in range(leftEdge, rightEdge):  # Høyde
+            if(lines[i][j] == 255):  # Hvit/Kaffe
+                coffee = coffee+1
+            elif(lines[i][j] == 127):  # Gray/Container
+                notCoffee = notCoffee+1
+            total = total+1
+            if coffee != 0:
+                coffeeLevel = round((coffee/(coffee + notCoffee))*100, 1)
+    return coffeeLevel
 
-      
-    m=int(((rightEdge-leftEdge)/2) + leftEdge)#Looks for the first white pixel from the bottom
-    while slices[l][m]!=255:
-      bottomEdge=l
-      l-=1
-    return {"leftEdge":leftEdge+10, "rightEdge":rightEdge-10,"bottomEdge":bottomEdge}
-  except IndexError:
-    print("index error")
-    return {"leftEdge":None, "rightEdge":None,"bottomEdge":None}
-  except:
-    print("General Error")
-    return {"leftEdge":None, "rightEdge":None,"bottomEdge":None}
-def findCoffeeLevel(lines,edges):
-  coffee = 0
-  notCoffee = 0
-  total=0 
-  coffeeLevel=0
-  if edges["leftEdge"] == None or ["rightEdge"] == None:
-    return "error"
-  leftEdge=edges["leftEdge"]
-  rightEdge=edges["rightEdge"]
-  bottomEdge=edges["bottomEdge"]
-  for i in range(0,bottomEdge): #bredde
-    for j in range(leftEdge,rightEdge): #Høyde
-      if(lines[i][j]==255): #Hvit/Kaffe
-       coffee=coffee+1
-      elif(lines[i][j]==127): #Gray/Container
-       notCoffee = notCoffee+1
-      total=total+1
-      if coffee!=0:
-       coffeeLevel = round((coffee/(coffee + notCoffee))*100,1)
-  return coffeeLevel
 
 def checkLevel(prediction):
     print(prediction[0])
     lines = prediction[0]
     edges = findContainerEdges(lines)
-    coffeeLevel = findCoffeeLevel(lines,edges)
+    coffeeLevel = findCoffeeLevel(lines, edges)
     print(f"coffeeLevel: {coffeeLevel}%")
     return coffeeLevel
 
 
-
 learn = None
-#Fastai slutt
+# Fastai slutt
