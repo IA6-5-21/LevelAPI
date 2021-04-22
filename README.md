@@ -1,7 +1,7 @@
 # LevelAPI
 
 
-##Docker
+## Docker
 A dockerfile is provided, ready for building.
 To build the image:
 Clone this repository
@@ -22,7 +22,7 @@ docker tag levelapi <YOURSERVER>.azurecr.io/levelapi
 Finally push to azure:
 docker push coffeefinderregistry.azurecr.io/levelapi
 
-##Azure
+## Azure
 Create a new Container instance in azure portal.
 Select the container registry you created earlier, thats linked to the docker.
 If you got the "az"  azure CLI run to show the container status:
