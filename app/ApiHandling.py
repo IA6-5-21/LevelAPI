@@ -8,7 +8,7 @@ import uvicorn
 import asyncio
 import aiohttp
 import aiofiles
-from fastapi.middleware.cors import CORSMiddleware
+#from fastapi.middleware.cors import CORSMiddleware
 from machineLearning import *
 
 from pydantic import BaseModel 
@@ -20,22 +20,23 @@ class Item(BaseModel):
 app = FastAPI()
 
 
-origins = [
-    "*"
-]
+# origins = [
+#     "*"
+# ]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=origins,
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 
 @app.on_event("startup")
 async def startup_event():
     """Setup the learner on server start"""
+    print("Setup the learner on server start")
     global learn
     '''Receive model from onedrive'''
     '''commented out to increase loading speed when not predicting during development''' 
@@ -43,15 +44,30 @@ async def startup_event():
     tasks = [asyncio.ensure_future(setup_learner())]  # assign some task
     learn = (await asyncio.gather(*tasks))[0]  # get tasks
 
+@app.post("/fastai/predict")
+async def machineLearningPrediction(item:Item):
+    
+    # level = 1337  #Avoid null error
+    print("fastai POST test!")
+    image = base64toimage(item.image)   #Convert the recieved base64string to a image, returns image
+    pred = learn.predict(image)         #Run prediction, return tensorflow
+    level = checkLevel(pred)            #Analyses the tensor and calculates level ,returns level 
+    plotimage = tensor2image(pred)         #Create a image plot  of the prediction 
+    print(level)
+    
+    return {"name": "fastai","level": level,"image":plotimage}
 
 
+@app.post("/opencv/predict")
+async def traditionalPrediction(item: Item):
+    print("openCv POST test!")
+    #call something like:
+    prediction = trad.predict(item.image)
+    return prediction
+    
 
 
-@app.get("/fastai/predict",response_class=HTMLResponse)
-async def wrongPage():
-    '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
-    print("GET test")
-    return getPage()
+## Redirecting to azurewebpage if entering fastapi container domain
 
 @app.get("/",response_class=HTMLResponse)
 async def wrongPageroot():
@@ -59,18 +75,17 @@ async def wrongPageroot():
     print("GET test")
     return getPage()
 
-@app.post("/fastai/predict")
-async def machineLearningPrediction(item:Item):
-    
-    level = 15.0
-    print("POST test!")
-    image = base64toimage(item.image)
-    pred = learn.predict(image)
-    level = checkLevel(pred)
-    aimage = tensor2image(pred)
-    print(level)
-    '''ReturnTEST; sending recieved image back to sender (coffeefinder webpage)'''
-    return {"name": "fastai","level": level,"image":aimage}
+@app.get("/fastai/predict",response_class=HTMLResponse)
+async def wrongPage():
+    '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
+    print("GET test")
+    return getPage()
+
+@app.get("/opencv/predict",response_class=HTMLResponse)
+async def wrongPage():
+    '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
+    print("GET test")
+    return getPage()
 
 def getPage():
     '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
@@ -79,7 +94,7 @@ def getPage():
     <html>
         <head>
             <title>Wrong place!</title>
-            <meta http-equiv="refresh" content="10; URL=http://localhost:3000/" />
+            <meta http-equiv="refresh" content="10; URL=http://coffeefinder.azurewebsites.net/" />
             <link
             rel="stylesheet"
             href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
@@ -128,18 +143,12 @@ def getPage():
         <body>
              <div class="jumbotron text-center">
                 <h1>Wrong page</h1>
-                <p>Redirecting to the Coffeefinder webpage @ <a href="http://localhost:3000/">localhost:3000</a>!</p>
+                <p>Redirecting to the Coffeefinder webpage @ <a href="http://coffeefinder.azurewebsites.net/">coffeefinder.azurewebsites.net</a>!</p>
             </div>
         </body>
     </html>
     """
 
 
-@app.post("/opencv/predict")
-async def traditionalPrediction(item: Item):
-    #call something like:
-    prediction = trad.predict(item.image)
-    return prediction
-
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=80)
+    uvicorn.run(app, host="0.0.0.0", port=8080)
