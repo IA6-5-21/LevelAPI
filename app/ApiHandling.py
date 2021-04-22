@@ -1,8 +1,9 @@
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+import traditional as trad
 from fastai.vision.all import *
-#import traditional as trad
+
 import uvicorn
 import asyncio
 import aiohttp
@@ -17,7 +18,6 @@ class Item(BaseModel):
     name: str
 
 app = FastAPI()
-
 
 
 origins = [
@@ -46,6 +46,7 @@ async def startup_event():
 
 
 
+
 @app.get("/fastai/predict",response_class=HTMLResponse)
 async def wrongPage():
     '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
@@ -68,15 +69,9 @@ async def machineLearningPrediction(item:Item):
     level = checkLevel(pred)
     aimage = tensor2image(pred)
     print(level)
-
     '''ReturnTEST; sending recieved image back to sender (coffeefinder webpage)'''
     return {"name": "fastai","level": level,"image":aimage}
 
-'''Commented out during development of machinelearning module'''
-# @app.post("/opencv/predict")
-# async def analyze(file: bytes = File(...)):
-#     pred = learn.predict(file)
-#     return {"result": pred[0]}
 def getPage():
     '''GET for browser entry to /fastai/predict, giving link to coffeeefinder webpage'''
     
@@ -139,6 +134,12 @@ def getPage():
     </html>
     """
 
+
+@app.post("/opencv/predict")
+async def traditionalPrediction(item: Item):
+    #call something like:
+    prediction = trad.predict(item.image)
+    return prediction
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=80)
