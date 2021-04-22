@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import traditional as trad
@@ -7,7 +7,7 @@ from fastai.vision.all import *
 import uvicorn
 import asyncio
 import aiohttp
-import aiofiles
+
 #from fastapi.middleware.cors import CORSMiddleware
 from machineLearning import *
 
@@ -151,4 +151,4 @@ def getPage():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=80)
