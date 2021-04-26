@@ -8,8 +8,8 @@ import uvicorn
 import asyncio
 import aiohttp
 
-#from fastapi.middleware.cors import CORSMiddleware
-from machineLearning import *
+from fastapi.middleware.cors import CORSMiddleware
+from machineLearning import * 
 
 from pydantic import BaseModel
 
@@ -22,17 +22,17 @@ class Item(BaseModel):
 app = FastAPI()
 
 
-# origins = [
-#     "*"
-# ]
+origins = [
+    "*"
+]
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")
@@ -49,18 +49,10 @@ async def startup_event():
 
 @app.post("/fastai/predict")
 async def machineLearningPrediction(item: Item):
-
-    # level = 1337  #Avoid null error
     print("fastai POST test!")
-    # Convert the recieved base64string to a image, returns image
-    image = base64toimage(item.image)
-    pred = learn.predict(image)  # Run prediction, return tensorflow
-    # Analyses the tensor and calculates level ,returns level
-    level = checkLevel(pred)
-    plotimage = tensor2image(pred)  # Create a image plot  of the prediction
-    print(level)
-
-    return {"name": "fastai", "level": level, "image": plotimage}
+    #Calling the machinelearning python script
+    mlprediction = runPredict(item.image, learn)
+    return mlprediction
 
 
 @app.post("/opencv/predict")

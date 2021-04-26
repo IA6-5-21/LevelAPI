@@ -51,16 +51,20 @@ async def setup_learner():
             raise
 
 
-def runPredict(predicion):
+def runPredict(base64image, learn):
+    image = base64toimage(base64image)
+    prediction = learn.predict(image)  # Run prediction, return tensorflow
+    plotimage = tensor2image(prediction)  # Create a image plot  of the prediction
     try:
-        lines = prediction[0]
-        edges = findContainerEdges(lines)
-        coffeeLevel = findCoffeeLevel(edges, lines)
-        print(f"coffeeLevel: {coffeeLevel}%")
-        return coffeeLevel
+         # Convert the recieved base64string to a image, returns image
+        # Analyses the tensor and calculates level ,returns level
+        coffeeLevel = checkLevel(prediction)
+        #print(f"coffeeLevel: {coffeeLevel}%")
+        return {"name": "fastai", "level": coffeeLevel, "image": plotimage}
+
     except:
-        coffeeLevel = "Error"
-        return coffeeLevel
+        coffeeLevel = "Read error"
+        return {"name": "fastai", "level": coffeeLevel, "image": plotimage}
 
 
 def base64toimage(baseInput):
@@ -94,6 +98,7 @@ def tensor2image(tensors):
 
     plt.imshow(tensors[1])
     filename = 'predictionPlot.png'
+    plt.rcParams['axes.facecolor'] = 'black'
 
     plotfile = os.path.join(path, filename)
     plt.axis('off')
@@ -157,11 +162,11 @@ def findCoffeeLevel(lines, edges):
 
 
 def checkLevel(prediction):
-    print(prediction[0])
+    #print(prediction[0])
     lines = prediction[0]
     edges = findContainerEdges(lines)
     coffeeLevel = findCoffeeLevel(lines, edges)
-    print(f"coffeeLevel: {coffeeLevel}%")
+    #print(f"coffeeLevel: {coffeeLevel}%")
     return coffeeLevel
 
 
